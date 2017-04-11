@@ -1,0 +1,103 @@
+---
+title: "Regression_Models_Week3"
+author: "Dimira Petrova"
+date: "April 11, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1
+
+Consider the mtcars data set. Fit a model with mpg as the outcome that includes number of cylinders as a factor variable and weight as confounder. Give the adjusted estimate for the expected change in mpg comparing 8 cylinders to 4.
+
+```{r}
+# This model is adjusted to the weight
+data(mtcars)
+fit = lm(mpg ~ factor(cyl) + wt, mtcars)
+summary(fit)$coef
+```
+
+Answer: -6.070860
+
+## Question 2
+
+Consider the mtcars data set. Fit a model with mpg as the outcome that includes number of cylinders as a factor variable and weight as a possible confounding variable. Compare the effect of 8 versus 4 cylinders on mpg for the adjusted and unadjusted by weight models. Here, adjusted means including the weight variable as a term in the regression model and unadjusted means the model without weight included. What can be said about the effect comparing 8 and 4 cylinders after looking at models with and without weight included?.
+
+```{r}
+# Fit a model that does not contain wt as a confounder or term.
+# This is the unadjusted weight models.
+fit2 = lm(mpg ~ factor(cyl), data = mtcars)
+# Compare the estimate of 8 cyls compared to that of 4 cyls from the models with and without wt.
+cyl.8 = data.frame(summary(fit)$coef[3], summary(fit2)$coef[3]); names(cyl.8) = c("with wt", "no wt"); rownames(cyl.8) = "cyl 8 Est."
+print(cyl.8)
+```
+Answer: Holding weight constant, cylinder appears to have less of an impact on mpg than if weight is disregarded.
+
+## Question 3
+
+Consider the mtcars data set. Fit a model with mpg as the outcome that considers number of cylinders as a factor variable and weight as confounder. Now fit a second model with mpg as the outcome model that considers the interaction between number of cylinders (as a factor variable) and weight. Give the P-value for the likelihood ratio test comparing the two models and suggest a model using 0.05 as a type I error rate significance benchmark.
+
+```{r}
+# Fit a model with mpg as the outcome with cyl as a factor variable and weight as confounder.
+fit3 = lm(mpg ~ factor(cyl) + wt, data = mtcars)
+# Fit a model with mpg as the outcome that considers the interaction between number of cylinders and weight.
+fit4 = lm(mpg ~ factor(cyl)*wt, data = mtcars)
+anova(fit3, fit4)
+```
+
+Answer: The P-value is larger than 0.05. So, according to our criterion, we would fail to reject, which suggests that the interaction terms may not be necessary.
+
+## Question 4
+Consider the mtcars data set. Fit a model with mpg as the outcome that includes number of cylinders as a factor variable and weight inlcuded in the model as
+```{r}
+lm(mpg ~ I(wt * 0.5) + factor(cyl), data = mtcars)
+```
+How is the wt coefficient interpretted?
+```{r}
+lm(mpg ~ I(wt * 0.5) + factor(cyl), data = mtcars)
+```
+Answer: The estimated expected change in MPG per one ton increase in weight for a specific number of cylinders(4, 6, 8).
+
+## Question 5
+Consider the following data set
+```{r}
+x <- c(0.586, 0.166, -0.042, -0.614, 11.72)
+y <- c(0.549, -0.026, -0.127, -0.751, 1.344)
+```
+Give the hat diagonal for the most influential point
+```{r}
+x = c(0.586, 0.166, -0.042, -0.614, 11.72)
+y = c(0.549, -0.026, -0.127, -0.751, 1.344)
+fit5 = lm(y ~ x)
+# Find the maximum point.
+hatvalues(fit5)[which.max(abs(hatvalues(fit5)))]
+
+# or it can be done by
+influence(fit5)$hat
+
+## showing how it's actually calculated
+xm <- cbind(1, x)
+diag(xm %*% solve(t(xm) %*% xm) %*% t(xm))
+
+```
+Answer: 0.9946
+
+## Question 6
+Consider the following data set
+```{r}
+x <- c(0.586, 0.166, -0.042, -0.614, 11.72)
+y <- c(0.549, -0.026, -0.127, -0.751, 1.344)
+```
+Give the slope dfbeta for the point with the highest hat value.
+```{r}
+influence.measures(fit5)$infmat[which.max(abs(influence.measures(fit5)$infmat[, 2])), 2]
+```
+Answer: -133.8226
+
+## Question 7
+Consider a regression relationship between Y and X with and without adjustment for a third variable Z. Which of the following is true about comparing the regression coefficient between Y and X with and without adjustment for Z.
+
+Answer: It is possible for the coefficient to reverse sign after adjustment. For example, it can be strongly significant and positive before adjustment and strongly significant and negative after adjustment.
